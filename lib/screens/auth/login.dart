@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:location_tracker/screen/auth/register.dart';
+// import 'package:location_tracker/screens/auth/register.dart';
 import 'package:location_tracker/bloc/auth/auth_bloc.dart';
 import 'package:location_tracker/bloc/auth/auth_event.dart';
 import 'package:location_tracker/bloc/auth/auth_state.dart';
 import 'package:location_tracker/enum.dart';
-import 'package:location_tracker/screen/message/chat_screen.dart';
+import 'package:location_tracker/screens/message/chat_screen.dart';
 
 class AuthScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
