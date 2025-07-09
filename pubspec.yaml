@@ -46,6 +46,7 @@ dependencies:
   workmanager:
   connectivity_plus:
   flutter_background_service_android:
+  flutter_local_notifications:
 
 
 

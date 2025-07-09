@@ -54,6 +54,10 @@
             android:exported="false"
             android:foregroundServiceType="location|dataSync"
             tools:replace="android:exported" />
+        <service
+            android:name="com.pravera.flutter_background_service.service.FlutterBackgroundService"
+            android:foregroundServiceType="location"
+            />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
