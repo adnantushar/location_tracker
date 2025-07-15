@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location_tracker/data/repositories/auth_repository.dart';
+import 'package:location_tracker/storage/admin_user_storage.dart';
 import 'package:location_tracker/storage/user_storage.dart';
 import 'package:location_tracker/storage/secure_storage.dart';
 import 'package:location_tracker/bloc/auth/auth_event.dart';
@@ -65,10 +66,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       var userInfo = response['user'];
       msg = response['message'];
       final token = response['token']; // Use proper token if available
+      var adminInfo = response['admin'];
 
       final userId = userInfo['id'] ?? -1;
       final email = userInfo['email'];
       final fullname = userInfo['fullname'];
+
+      final adminUserId = adminInfo['id'] ?? -1;
+      final adminEmail =  adminInfo['email'];
+      final adminName = adminInfo['fullname'];
 
 
       if (userId == -1) {
@@ -86,6 +92,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } catch (e) {
         print('SecureStorage save failed: $e');
         await SecureStorage.clearAll();
+        throw Exception('Failed to save user data. Please try again.');
+      }
+
+      // Save admin data
+      try {
+        await AdminUserStorage.saveUser(
+          adminUserId,
+          adminEmail,
+          adminName,
+          token: null,
+        );
+      } catch (e) {
+        print('Admin User save failed: $e');
+        await SecureStorage.clearAll();
+        await AdminUserStorage.clearAll();
         throw Exception('Failed to save user data. Please try again.');
       }
 
@@ -137,21 +158,37 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final isLoggedIn = await SecureStorage.isLoggedIn();
       if (isLoggedIn) {
-        final userId = await SecureStorage.getUserId();
-        if (userId != null) {
-          emit(AuthSuccess(''));
-        } else {
+        // final userId = await SecureStorage.getUserId();
+        final token = await SecureStorage.getToken();
+        // if (userId != null) {
+        //   emit(AuthSuccess(''));
+        // }
+        if (token != null) {
+          final valid = await _authRepository.validateToken(token);
+          if (valid) {
+            emit(AuthSuccess(''));
+          } else {
+            await SecureStorage.clearAll();
+            await UserStorage.clearUser();
+            await AdminUserStorage.clearAll();
+            emit(AuthInitial());
+          }
+        }
+        else {
           await SecureStorage.clearAll();
           await UserStorage.clearUser();
+          await AdminUserStorage.clearAll();
           emit(AuthInitial());
         }
       } else {
         await SecureStorage.clearAll();
+        await AdminUserStorage.clearAll();
         emit(AuthInitial());
       }
     } catch (e) {
       print('Error checking login status: $e');
       await SecureStorage.clearAll();
+      await AdminUserStorage.clearAll();
       emit(AuthInitial());
     }
   }
@@ -160,6 +197,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       await UserStorage.clearUser();
       await SecureStorage.clearAll();
+      await AdminUserStorage.clearAll();
       emit(AuthInitial());
     } catch (e) {
       emit(AuthFailure(error: 'Logout failed: $e'));

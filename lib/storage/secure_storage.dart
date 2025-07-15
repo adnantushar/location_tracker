@@ -98,6 +98,33 @@ class SecureStorage {
     }
   }
 
+
+  static Future<UserModel?> getUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      final int? userId = prefs.getInt('userId');
+      final String? email = prefs.getString('email');
+      final String? fullname = prefs.getString('fullname');
+      final String? token = await _storage.read(key: _keyToken);
+
+      if (userId != null && email != null && fullname != null) {
+        return UserModel.fromStorage(
+          userId: userId,
+          email: email,
+          fullname: fullname,
+          token: token,
+        );
+      } else {
+        return null; // incomplete data
+      }
+    } catch (e) {
+      print('Error retrieving user: $e');
+      return null;
+    }
+  }
+
+
   // static Future<String?> getFirstName() async {
   //   try {
   //     final prefs = await SharedPreferences.getInstance();
